@@ -2,38 +2,42 @@ import os
 from dotenv import load_dotenv
 from google import genai
 
-# Cargar las variables guardadas en .env
+# Cargar variables de entorno desde .env
 load_dotenv()
 
-# Obtener nuestra clave secreta
+# Obtener la API key
 api_key = os.getenv("GEMINI_API_KEY")
 
-# Crear el cliente para comunicarnos con Gemini
+# Comprobar que exista la API key
+if not api_key:
+    print("Error: no se encontró GEMINI_API_KEY en el archivo .env")
+    exit()
+
+# Crear cliente de Gemini
 client = genai.Client(api_key=api_key)
 
-historial = []
+# Crear una conversación
+chat = client.chats.create(
+    model="gemini-3.7-flash"
+)
+
+print("Chat iniciado.")
+print("Escribe 'salir' para terminar.\n")
 
 while True:
-    # Pedir una pregunta al usuario
-    pregunta = input("\nEscribe tu pregunta: ")
-    
-    # Finalizar el programa
+    pregunta = input("Tú: ")
+
     if pregunta.strip().lower() == "salir":
         break
-    
-    historial.append(f"Usuario: {pregunta}")
 
-    contexto = "\n".join(historial)
-    # Enviar la pregunta a Gemini
-    respuesta = client.interactions.create(
-        model="gemini-3.6-flash",
-        input=contexto
-    )
+    try:
+        respuesta = chat.send_message(
+            message=pregunta
+        )
 
-    historial.append(f"IA: {respuesta.output_text}")
+        print(f"\nIA: {respuesta.text}\n")
 
-    # Mostrar la respuesta
-    print("\nRespuesta:\n")
-    print(respuesta.output_text)
+    except Exception as error:
+        print(f"\nOcurrió un error: {error}\n")
 
-print("\nPrograma finalizado.")
+print("Programa finalizado.")
